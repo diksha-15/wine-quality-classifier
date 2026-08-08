@@ -22,7 +22,6 @@ Run locally:  streamlit run app.py
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 import streamlit as st
 
 from sklearn.model_selection import train_test_split
@@ -248,11 +247,35 @@ st.markdown(f'<div class="step">3 · Confusion matrix — {model_name}</div>', u
 c1, c2 = st.columns([1, 1])
 with c1:
     cm = confusion_matrix(y_true, y_pred)
-    fig, ax = plt.subplots(figsize=(4.5, 3.6))
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Purples", cbar=False,
-                xticklabels=["not good", "good"], yticklabels=["not good", "good"], ax=ax)
-    ax.set_xlabel("Predicted")
-    ax.set_ylabel("Actual")
+    labels = ["not good", "good"]
+    # Shade by row-normalised proportion (a single sequential colormap = standard practice),
+    # while annotating each cell with the raw count and its row percentage.
+    row_sums = cm.sum(axis=1, keepdims=True)
+    cm_norm = np.divide(cm, row_sums, out=np.zeros_like(cm, dtype=float), where=row_sums != 0)
+
+    fig, ax = plt.subplots(figsize=(4.6, 3.9))
+    im = ax.imshow(cm_norm, cmap="Blues", vmin=0.0, vmax=1.0)
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    cbar.ax.set_ylabel("proportion of actual class", rotation=90, fontsize=8)
+    cbar.ax.tick_params(labelsize=7)
+
+    cell_names = [["TN", "FP"], ["FN", "TP"]]
+    for i in range(2):
+        for j in range(2):
+            pct = cm_norm[i, j] * 100
+            txt_color = "white" if cm_norm[i, j] > 0.5 else "#1f2d3d"
+            ax.text(j, i, f"{cell_names[i][j]}\n{cm[i, j]:,}\n{pct:.1f}%",
+                    ha="center", va="center", color=txt_color, fontsize=10, fontweight="bold")
+
+    ax.set_xticks([0, 1]); ax.set_xticklabels(labels)
+    ax.set_yticks([0, 1]); ax.set_yticklabels(labels)
+    ax.set_xlabel("Predicted"); ax.set_ylabel("Actual")
+    ax.set_title(f"{model_name}", fontsize=10, pad=8)
+    ax.set_xticks(np.arange(-.5, 2, 1), minor=True)
+    ax.set_yticks(np.arange(-.5, 2, 1), minor=True)
+    ax.grid(which="minor", color="white", linewidth=1.5)
+    ax.tick_params(which="minor", length=0)
+    fig.tight_layout()
     st.pyplot(fig)
 with c2:
     st.text("Classification report")
