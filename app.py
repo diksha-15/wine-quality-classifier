@@ -108,25 +108,29 @@ def scores_for(model, X):
 st.title("🍷 Wine Quality Classifier")
 st.markdown(
     "Predict whether a wine is **good** (quality ≥ 7) from its physicochemical "
-    "properties, and compare five classification models. Upload your **test CSV** "
-    "in the sidebar to evaluate the selected model."
+    "properties, and compare five classification models. Pick a model and upload "
+    "your **test CSV** below to evaluate it."
 )
 
 scaler, feature_cols, models = load_scaler_and_models()
 
 # ---- Sidebar: (a) CSV upload  +  (b) model dropdown ----
-st.sidebar.header("Controls")
-uploaded = st.sidebar.file_uploader("Upload test data (CSV)", type=["csv"])
-model_name = st.sidebar.selectbox("Select model", list(models.keys()), index=4)
-st.sidebar.caption(
-    "The CSV must contain the 12 feature columns and a `good` target column "
-    "(0/1). Use the provided `test_data.csv`."
+# ---- Controls in the MAIN area (a: CSV upload, b: model dropdown), above the preview ----
+st.subheader("1. Choose a model and upload your test data")
+ctrl_left, ctrl_right = st.columns([1, 1])
+with ctrl_left:
+    model_name = st.selectbox("Select model", list(models.keys()), index=4)
+with ctrl_right:
+    uploaded = st.file_uploader("Upload test data (CSV)", type=["csv"])
+st.caption(
+    "The CSV must contain the 12 feature columns and a `good` target column (0/1). "
+    "Use the provided `test_data.csv` from the repository."
 )
 
 if uploaded is None:
-    st.info("⬅️ Upload `test_data.csv` in the sidebar to see predictions and metrics.")
-    st.subheader("Expected feature columns")
-    st.code(", ".join(feature_cols))
+    st.info("⬆️ Upload `test_data.csv` above to see predictions and metrics.")
+    with st.expander("Expected feature columns"):
+        st.code(", ".join(feature_cols))
     st.stop()
 
 # ---- Read + validate the uploaded data ----
@@ -149,23 +153,15 @@ model = models[model_name]
 y_pred = model.predict(X)
 y_score = scores_for(model, X)
 
-# ---- (c) Evaluation-metrics display ----
-st.subheader(f"Evaluation metrics — {model_name}")
+# ---- (c) Evaluation-metrics display for the SELECTED model ----
+st.subheader(f"2. Evaluation metrics — {model_name}")
 metrics = compute_metrics(y_true, y_pred, y_score)
 cols = st.columns(6)
 for col, (name, val) in zip(cols, metrics.items()):
     col.metric(name, f"{val:.3f}")
 
-# All-model comparison table on the uploaded test data.
-st.subheader("All models on this test data")
-rows = []
-for name, m in models.items():
-    rows.append({"Model": name, **{k: round(v, 4) for k, v in
-                                    compute_metrics(y_true, m.predict(X), scores_for(m, X)).items()}})
-st.dataframe(pd.DataFrame(rows).set_index("Model"), use_container_width=True)
-
-# ---- (d) Confusion matrix + classification report ----
-st.subheader(f"Confusion matrix — {model_name}")
+# ---- (d) Confusion matrix + classification report for the SELECTED model ----
+st.subheader(f"3. Confusion matrix — {model_name}")
 c1, c2 = st.columns([1, 1])
 with c1:
     cm = confusion_matrix(y_true, y_pred)
@@ -178,5 +174,15 @@ with c1:
 with c2:
     st.text("Classification report")
     st.code(classification_report(y_true, y_pred, target_names=["not good", "good"], zero_division=0))
+
+# ---- All-model comparison, kept OUT of the way in a collapsed expander ----
+st.divider()
+with st.expander("📊 Compare all 5 models on this test data (click to expand)"):
+    st.caption("Metrics for every model on the same uploaded test set — useful for the overall comparison.")
+    rows = []
+    for name, m in models.items():
+        rows.append({"Model": name, **{k: round(v, 4) for k, v in
+                                        compute_metrics(y_true, m.predict(X), scores_for(m, X)).items()}})
+    st.dataframe(pd.DataFrame(rows).set_index("Model"), use_container_width=True)
 
 st.caption("UCI Wine Quality (red+white). Models trained on startup — see model/train_models.py.")
