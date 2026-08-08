@@ -123,14 +123,6 @@ st.markdown(
       .step { font-size: 1.15rem; font-weight: 700; color: #6d213c;
               margin: 6px 0 2px; }
 
-      /* Metric tiles */
-      div[data-testid="stMetric"] {
-        background: #faf3f5; border: 1px solid #ecd7dd; border-radius: 12px;
-        padding: 12px 14px; text-align: center;
-      }
-      div[data-testid="stMetricLabel"] { justify-content:center; color:#8a4a5c; font-weight:600; }
-      div[data-testid="stMetricValue"] { font-size: 1.6rem; color:#6d213c; }
-
       /* Tighten the file-uploader box */
       section[data-testid="stFileUploaderDropzone"] { padding: 10px 14px; }
     </style>
@@ -307,17 +299,15 @@ with st.expander("📊 Compare all 5 models on this test data (click to expand)"
         return ["background-color: #e6f4ea; color: #1e7d43; font-weight: 700" if v else ""
                 for v in is_max]
 
+    # Apply the Styler to st.dataframe (NOT st.table): this keeps Streamlit's interactive
+    # toolbar — column sorting, search, download, fullscreen, column visibility — while still
+    # showing the green "best per metric" highlight and the blue selected-model row.
     styled = (
         comp.style
         .format("{:.4f}")
         .apply(highlight_selected_row, axis=1)
         .apply(highlight_best, subset=metric_cols, axis=0)
-        .set_table_styles([
-            {"selector": "th", "props": [("font-weight", "700"), ("color", "#6d213c"),
-                                         ("background-color", "#faf3f5")]},
-            {"selector": "td", "props": [("font-variant-numeric", "tabular-nums")]},
-        ])
     )
-    st.table(styled)
+    st.dataframe(styled, use_container_width=True)
 
 st.caption("UCI Wine Quality (red+white). Models trained on startup — see model/train_models.py.")
