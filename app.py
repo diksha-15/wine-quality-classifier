@@ -284,11 +284,40 @@ with c2:
 # ---- All-model comparison, kept OUT of the way in a collapsed expander ----
 st.divider()
 with st.expander("📊 Compare all 5 models on this test data (click to expand)"):
-    st.caption("Metrics for every model on the same uploaded test set — useful for the overall comparison.")
+    st.caption("Metrics for every model on the same uploaded test set. "
+               "The **selected model** is highlighted in blue; the **best value per metric** is bold-green.")
+
     rows = []
     for name, m in models.items():
         rows.append({"Model": name, **{k: round(v, 4) for k, v in
                                         compute_metrics(y_true, m.predict(X), scores_for(m, X)).items()}})
-    st.dataframe(pd.DataFrame(rows).set_index("Model"), use_container_width=True)
+    comp = pd.DataFrame(rows).set_index("Model")
+
+    metric_cols = ["Accuracy", "AUC", "Precision", "Recall", "F1", "MCC"]
+
+    def highlight_selected_row(row):
+        # Subtle blue tint for the currently-selected model (a selection cue, not an alert).
+        if row.name == model_name:
+            return ["background-color: #eaf1fb"] * len(row)
+        return [""] * len(row)
+
+    def highlight_best(col):
+        # Soft green + bold on the best (max) value in each metric column.
+        is_max = col == col.max()
+        return ["background-color: #e6f4ea; color: #1e7d43; font-weight: 700" if v else ""
+                for v in is_max]
+
+    styled = (
+        comp.style
+        .format("{:.4f}")
+        .apply(highlight_selected_row, axis=1)
+        .apply(highlight_best, subset=metric_cols, axis=0)
+        .set_table_styles([
+            {"selector": "th", "props": [("font-weight", "700"), ("color", "#6d213c"),
+                                         ("background-color", "#faf3f5")]},
+            {"selector": "td", "props": [("font-variant-numeric", "tabular-nums")]},
+        ])
+    )
+    st.table(styled)
 
 st.caption("UCI Wine Quality (red+white). Models trained on startup — see model/train_models.py.")
