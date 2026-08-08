@@ -4,6 +4,9 @@ An end-to-end machine-learning project that trains and compares **five
 classification models** on the UCI Wine Quality dataset and serves them through
 an interactive **Streamlit** web app.
 
+**🔗 GitHub repository:** https://github.com/diksha-15/wine-quality-classifier
+**🚀 Live Streamlit app:** https://winequality-classifier.streamlit.app/
+
 ---
 
 ## a. Problem statement
@@ -37,7 +40,7 @@ panels are slow and expensive.
 
 ## c. GitHub repository link
 
-`https://github.com/<your-username>/wine-quality-classifier`  <!-- replace with your repo URL -->
+https://github.com/diksha-15/wine-quality-classifier
 
 Repository contents:
 
@@ -101,7 +104,7 @@ The deployed app lets you:
   model on the uploaded data.
 - **Inspect** the confusion matrix and full classification report.
 
-Live app: `https://<your-app>.streamlit.app`  <!-- replace with your deployed URL -->
+Live app: https://winequality-classifier.streamlit.app/
 
 ### Run locally
 
