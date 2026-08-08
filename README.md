@@ -50,15 +50,15 @@ wine-quality-classifier/
 ├── .gitignore
 └── model/
     ├── model_training.ipynb # notebook: EDA, trains 5 models, 6 metrics, confusion matrices + ROC curves
-    ├── train_models.py      # script version of the training (same logic, headless)
-    ├── scaler.joblib
-    ├── feature_cols.joblib
-    ├── logistic_regression.joblib
-    ├── decision_tree.joblib
-    ├── knn.joblib
-    ├── naive_bayes.joblib
-    └── random_forest_ensemble.joblib
+    └── train_models.py      # script version of the training (same logic, headless)
 ```
+
+> **Note on model files:** the five classifiers train in well under a second, so
+> the app re-trains them on startup (cached) rather than shipping large pickled
+> `*.joblib` files. This keeps the repository lightweight and avoids scikit-learn
+> version-mismatch errors when deploying on Streamlit Community Cloud. The
+> `model/` folder therefore contains the training **code** (`.ipynb` / `.py`), as
+> recommended in the assignment.
 
 ## d. Models used
 
