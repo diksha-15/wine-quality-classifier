@@ -125,6 +125,10 @@ st.markdown(
 
       /* Tighten the file-uploader box */
       section[data-testid="stFileUploaderDropzone"] { padding: 10px 14px; }
+
+      /* Recolour the dataframe cell-selection/focus accent from red -> blue */
+      div[data-testid="stDataFrame"] [data-testid="stTable"] { --gdg-accent-color: #2f6feb; }
+      div[data-testid="stDataFrame"] * { --gdg-accent-color: #2f6feb !important; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -236,7 +240,7 @@ st.caption(
 
 # ---- (d) Confusion matrix + classification report for the SELECTED model ----
 st.markdown(f'<div class="step">3 · Confusion matrix — {model_name}</div>', unsafe_allow_html=True)
-c1, c2 = st.columns([1, 1])
+c1, c2 = st.columns([1, 1.15])
 with c1:
     cm = confusion_matrix(y_true, y_pred)
     labels = ["not good", "good"]
@@ -270,8 +274,21 @@ with c1:
     fig.tight_layout()
     st.pyplot(fig)
 with c2:
-    st.text("Classification report")
-    st.code(classification_report(y_true, y_pred, target_names=["not good", "good"], zero_division=0))
+    st.markdown("**Classification report**")
+    # Render as a dataframe (fits the column width, no horizontal scroll needed) instead
+    # of a fixed-width text block.
+    report = classification_report(
+        y_true, y_pred, target_names=["not good", "good"],
+        zero_division=0, output_dict=True,
+    )
+    report_df = pd.DataFrame(report).T
+    report_df = report_df.rename(columns={"f1-score": "f1"})
+    report_df["support"] = report_df["support"].astype(int)
+    st.dataframe(
+        report_df.style.format({"precision": "{:.2f}", "recall": "{:.2f}",
+                                "f1": "{:.2f}", "support": "{:d}"}),
+        use_container_width=True,
+    )
 
 # ---- All-model comparison, kept OUT of the way in a collapsed expander ----
 st.divider()
