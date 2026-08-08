@@ -198,9 +198,50 @@ y_score = scores_for(model, X)
 # ---- (c) Evaluation-metrics display for the SELECTED model ----
 st.markdown(f'<div class="step">2 · Evaluation metrics — {model_name}</div>', unsafe_allow_html=True)
 metrics = compute_metrics(y_true, y_pred, y_score)
+
+# Traffic-light thresholds are calibrated PER METRIC. Accuracy/Precision/Recall/F1 use a
+# common scale; AUC and MCC use their own (MCC of ~0.5 is already a strong result, and this
+# dataset is ~80% majority-class so accuracy must clear a high bar to count as "good").
+THRESHOLDS = {
+    "Accuracy":  (0.85, 0.80),   # (green_at, amber_at); below amber_at = red
+    "AUC":       (0.80, 0.70),
+    "Precision": (0.70, 0.50),
+    "Recall":    (0.70, 0.50),
+    "F1":        (0.65, 0.45),
+    "MCC":       (0.50, 0.30),
+}
+PALETTE = {
+    "green": ("#e6f4ea", "#cbe6d3", "#1e7d43"),   # (bg, border, text)
+    "amber": ("#fdf3e0", "#f3e0bd", "#b57614"),
+    "red":   ("#fdecec", "#f4d0d0", "#c0392b"),
+}
+
+def band(name, val):
+    green_at, amber_at = THRESHOLDS[name]
+    if val >= green_at:
+        return "green"
+    if val >= amber_at:
+        return "amber"
+    return "red"
+
 cols = st.columns(6)
 for col, (name, val) in zip(cols, metrics.items()):
-    col.metric(name, f"{val:.3f}")
+    bg, border, text = PALETTE[band(name, val)]
+    col.markdown(
+        f"""
+        <div style="background:{bg}; border:1px solid {border}; border-radius:12px;
+                    padding:12px 8px; text-align:center;">
+          <div style="font-size:.85rem; font-weight:600; color:{text}; opacity:.85;">{name}</div>
+          <div style="font-size:1.7rem; font-weight:800; color:{text};">{val:.3f}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+st.caption(
+    "🟢 strong · 🟠 moderate · 🔴 weak — thresholds are calibrated per metric "
+    "(this dataset is ~80% majority class, so **accuracy** must clear a high bar; "
+    "**AUC** and **MCC** are the most reliable indicators on imbalanced data)."
+)
 
 # ---- (d) Confusion matrix + classification report for the SELECTED model ----
 st.markdown(f'<div class="step">3 · Confusion matrix — {model_name}</div>', unsafe_allow_html=True)
