@@ -125,10 +125,6 @@ st.markdown(
 
       /* Tighten the file-uploader box */
       section[data-testid="stFileUploaderDropzone"] { padding: 10px 14px; }
-
-      /* Recolour the dataframe cell-selection/focus accent from red -> blue */
-      div[data-testid="stDataFrame"] [data-testid="stTable"] { --gdg-accent-color: #2f6feb; }
-      div[data-testid="stDataFrame"] * { --gdg-accent-color: #2f6feb !important; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -292,6 +288,7 @@ with c2:
 
 # ---- All-model comparison, kept OUT of the way in a collapsed expander ----
 st.divider()
+st.markdown('<div class="step">4 · Compare all models</div>', unsafe_allow_html=True)
 with st.expander("📊 Compare all 5 models on this test data (click to expand)"):
     st.caption("Metrics for every model on the same uploaded test set. "
                "The **selected model** is highlighted in blue; the **best value per metric** is bold-green.")
