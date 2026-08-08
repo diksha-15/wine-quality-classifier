@@ -104,26 +104,68 @@ def scores_for(model, X):
     return model.predict_proba(X)[:, 1] if hasattr(model, "predict_proba") else model.decision_function(X)
 
 
-# ----------------------------------------------------------------------------- UI
-st.title("🍷 Wine Quality Classifier")
+# ----------------------------------------------------------------------------- Styling
 st.markdown(
-    "Predict whether a wine is **good** (quality ≥ 7) from its physicochemical "
-    "properties, and compare five classification models. Pick a model and upload "
-    "your **test CSV** below to evaluate it."
+    """
+    <style>
+      /* Constrain overall content width and centre it */
+      .block-container { max-width: 1050px; padding-top: 2rem; }
+
+      /* Wine-themed hero banner */
+      .hero {
+        background: linear-gradient(135deg, #6d213c 0%, #a8324a 55%, #c85a6e 100%);
+        border-radius: 16px; padding: 26px 32px; margin-bottom: 22px;
+        color: #fff; box-shadow: 0 6px 22px rgba(109,33,60,.28);
+      }
+      .hero h1 { margin: 0; font-size: 2.05rem; font-weight: 800; letter-spacing:-.5px; }
+      .hero p  { margin: 8px 0 0; font-size: 1.02rem; opacity: .93; max-width: 760px; }
+
+      /* Section labels */
+      .step { font-size: 1.15rem; font-weight: 700; color: #6d213c;
+              margin: 6px 0 2px; }
+
+      /* Metric tiles */
+      div[data-testid="stMetric"] {
+        background: #faf3f5; border: 1px solid #ecd7dd; border-radius: 12px;
+        padding: 12px 14px; text-align: center;
+      }
+      div[data-testid="stMetricLabel"] { justify-content:center; color:#8a4a5c; font-weight:600; }
+      div[data-testid="stMetricValue"] { font-size: 1.6rem; color:#6d213c; }
+
+      /* Tighten the file-uploader box */
+      section[data-testid="stFileUploaderDropzone"] { padding: 10px 14px; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ----------------------------------------------------------------------------- UI
+st.markdown(
+    """
+    <div class="hero">
+      <h1>🍷 Wine Quality Classifier</h1>
+      <p>Predict whether a wine is <b>good</b> (quality ≥ 7) from its 12 physicochemical
+      properties, and compare five classification models. Pick a model and upload your
+      test CSV to evaluate it.</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 scaler, feature_cols, models = load_scaler_and_models()
 
-# ---- Sidebar: (a) CSV upload  +  (b) model dropdown ----
-# ---- Controls in the MAIN area (a: CSV upload, b: model dropdown), above the preview ----
-st.subheader("1. Choose a model and upload your test data")
-ctrl_left, ctrl_right = st.columns([1, 1])
-with ctrl_left:
+# ---- Controls in the MAIN area (a: CSV upload, b: model dropdown) ----
+st.markdown('<div class="step">1 · Choose a model &nbsp;&amp;&nbsp; upload your test data</div>',
+            unsafe_allow_html=True)
+
+# Narrow the controls so they don't stretch edge-to-edge: model | upload | spacer.
+c_model, c_upload, _spacer = st.columns([1.1, 1.4, 0.5])
+with c_model:
     model_name = st.selectbox("Select model", list(models.keys()), index=4)
-with ctrl_right:
+with c_upload:
     uploaded = st.file_uploader("Upload test data (CSV)", type=["csv"])
 st.caption(
-    "The CSV must contain the 12 feature columns and a `good` target column (0/1). "
+    "The CSV needs the 12 feature columns and a `good` target column (0/1). "
     "Use the provided `test_data.csv` from the repository."
 )
 
@@ -154,14 +196,14 @@ y_pred = model.predict(X)
 y_score = scores_for(model, X)
 
 # ---- (c) Evaluation-metrics display for the SELECTED model ----
-st.subheader(f"2. Evaluation metrics — {model_name}")
+st.markdown(f'<div class="step">2 · Evaluation metrics — {model_name}</div>', unsafe_allow_html=True)
 metrics = compute_metrics(y_true, y_pred, y_score)
 cols = st.columns(6)
 for col, (name, val) in zip(cols, metrics.items()):
     col.metric(name, f"{val:.3f}")
 
 # ---- (d) Confusion matrix + classification report for the SELECTED model ----
-st.subheader(f"3. Confusion matrix — {model_name}")
+st.markdown(f'<div class="step">3 · Confusion matrix — {model_name}</div>', unsafe_allow_html=True)
 c1, c2 = st.columns([1, 1])
 with c1:
     cm = confusion_matrix(y_true, y_pred)
